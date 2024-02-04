@@ -1,38 +1,218 @@
-.App {
-  text-align: center;
+body {
+  font-family: "Merriweather", serif;
+  font-weight: 200;
+  font-size: 1.3rem;
+  line-height: 3.2rem;
+  background: #FAF6F0;
+  color: #000;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.content a {
+  background-color:#FFB534;
+  color: #000;
+  font-weight: 600;
+  padding:.3rem;
+  text-decoration: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.content a:hover{
+  background: #C1F2B0;
+  color:#000;
+}
+
+.content .dropdown a{
+  background-color:#fff;
+}
+
+.content .dropdown a:hover{
+  background-color:#F4EAE0;
+}
+
+.content img{
+  float:left;
+  border-radius:8px;
+  border:#FFB534 solid 8px;
+}
+
+h1, h2, h3{
+  font-weight:bold;
+}
+
+.navbar {
+  font-family: "Roboto", sans-serif;
+  font-weight:300;
+  font-size:1rem;
+}
+
+.navbar-brand{
+  font-family: "Merriweather", serif;
+  font-weight:700;
+}
+
+.link-callout{
+  background-color:#FFB534;
+  color: #fff;
+  font-weight: 600;
+  padding:.3rem;
+  border-radius: 8px;
+}
+
+.link-callout:hover{
+  background: #C1F2B0;
+  color:#000;
+}
+
+.abst{
+  margin-top: 1.3rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5rem;
+  font-size: 1rem;
+  text-align: justify;
+}
+
+.notes {
+  font-size: 1.2rem;
+  line-height: 1.5rem;
+}
+
+.notes .card {
+  position:absolute;
+}
+
+@media (max-width:576px) {
+  .notes .card:hover{
+    opacity:0.2;
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+@media (min-width:576px) {
+  .notes .card:hover{
+    background: #C1F2B0;
+    color:#000;
+  }
 }
 
-.App-link {
-  color: #61dafb;
+.card {
+  font-family: "Josefin Slab";
+ background-color: #F4EAE0;
+  background-clip: border-box;
+  border: 0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.card-header {
+  padding: var(--bs-card-cap-padding-y) var(--bs-card-cap-padding-x);
+  margin-bottom: 0;
+  color: #888;
+  background-color: #fff;
+  border-bottom: 0;
+}
+
+.card-body {
+  flex: 1 1 auto;
+  padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
+  color: #888;
+}
+
+.inlineNote{
+  text-decoration-line: underline;
+  text-decoration-color: #FFB534;
+}
+
+.inlineNote:hover{
+  padding:2px;
+  background: #FFB534;
+  color:#000;
+}
+
+.markup{
+  font-family: "IBM Plex Mono", monospace;
+  font-weight:500;
+  background-color: #F4EAE0;
+  color: #888;
+}
+
+.copyBlock{
+  text-align:end;
+}
+
+.copy, .copied{
+  width: 30px;
+  height: 30px;
+}
+
+.copy{
+  fill:#888;
+}
+
+.copy:hover{
+  fill:#C1F2B0;
+}
+
+.copied{
+  fill:#C1F2B0;
+}
+
+.editorIcon{
+  width:30px;
+  height: 30px;
+}
+
+.editorIcon.active{
+  background-color: #FFB534;
+}
+
+.editorIcon:hover{
+  background-color: #C1F2B0;
+}
+
+.editor .btn:disabled{
+  border:0;
+}
+
+.editor button{
+  padding:2px;
+  margin:2px;
+}
+
+.editor .dropdown-menu{
+  min-width: 98%;
+  text-align:center;
+}
+
+.editor .btn-check:checked+.btn, .editor .btn.active, .editor .btn.show, .editor .btn:first-child:active, .editor :not(.btn-check)+.btn:active {
+  border: 0px;
+}
+
+.editor .btn-outline{
+  border:2px solid #F4EAE0;
+  background-color: #888;
+  color:#F4EAE0;
+  font-weight:bold;
+  padding: 5px;
+  margin-top: 8px;
+  margin-left: 10px;
+  height: 80%;
+}
+
+.editor .btn-outline:hover{
+  border:2px solid #888;
+  background-color: #F4EAE0;
+  color:#888;
+  font-weight:bold;
+  padding: 5px;
+  margin-top: 8px;
+  margin-left: 10px;
+  height: 80%;
+}
+
+.addLink{
+  margin-top: -26px;
+  margin-left: -35px;
+}
+
+.tiptap {
+  background-color:#F4EAE0;
+  border: 2px solid #888;
+  border-radius: 7px;
+  padding:5px;
 }
