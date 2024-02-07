@@ -152,6 +152,10 @@ h1, h2, h3{
   fill:#C1F2B0;
 }
 
+.clearBlock button{
+  text-align: center;
+}
+
 .editorIcon{
   width:30px;
   height: 30px;
@@ -183,7 +187,7 @@ h1, h2, h3{
   border: 0px;
 }
 
-.editor .btn-outline{
+.editor .btn-outline, .clearBlock button{
   border:2px solid #F4EAE0;
   background-color: #888;
   color:#F4EAE0;
@@ -194,7 +198,7 @@ h1, h2, h3{
   height: 80%;
 }
 
-.editor .btn-outline:hover{
+.editor .btn-outline:hover, .clearBlock button:hover{
   border:2px solid #888;
   background-color: #F4EAE0;
   color:#888;
@@ -210,9 +214,18 @@ h1, h2, h3{
   margin-left: -35px;
 }
 
+.Prosemirror-content{
+  height: 300px;
+  overflow-y:"scroll";
+}
+
 .tiptap {
   background-color:#F4EAE0;
   border: 2px solid #888;
   border-radius: 7px;
   padding:5px;
+}
+
+.modal-body textarea{
+  width:100%;
 }

@@ -10,7 +10,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Notes from './Notes.js';
 import { Interweave } from 'interweave';
 import { CopyIcon } from './Icons.js';
-import { SubmitForm } from './Editor.js';
+import { NoteEditor, SubmitForm } from './Editor.js';
 
 import article from './mock/article.json';
 import './App.css';
@@ -177,14 +177,16 @@ function List(){
 }
 
 function Submit(){
-  const value = useRef({"paperName":"",
+  const value = useRef(JSON.parse(localStorage.getItem('tsk-value')) ||  {"paperName":"",
   "paperAuthor":"",
   "submitName":"",
   "submitLink":"",
   "abstract":"",
   "article":"",
   "doi":"",
-  "links":[]
+  "references":[],
+  "notes":[],
+  "links":[{link_title: '', link_url: ''}]
 });
 
 const markup = useRef({"title":"",
@@ -206,8 +208,34 @@ const markup = useRef({"title":"",
 
   const [iconClass, setIconClass] = useState('copy');
 
+  const clearMarkup =  function(value, markup){
+    markup.current = {"title":"",
+    "authors":[],
+    "abstract":"",
+    "content":"",
+    "submissionBy":{"name":"","link":""},
+    "notes":[],
+    "references":[],
+    "works":[]
+  } 
+
+    value.current = {"paperName":"",
+    "paperAuthor":"",
+    "submitName":"",
+    "submitLink":"",
+    "abstract":"",
+    "article":"",
+    "doi":"",
+    "references":[],
+    "notes":[],
+    "links":[]
+  }
+
+    localStorage.removeItem('tsk-value')
+    document.getElementById("dispalyMarkup").innerText = JSON.stringify(markup, null, 2)
+}
+
   const copyMarkup = () => {
-    console.log("Here");
     const type = "text/plain"
     const blob = new Blob([markup.current], { type });
     const data = [new ClipboardItem({ [type]: blob })];
@@ -234,8 +262,13 @@ const markup = useRef({"title":"",
           <div id="dispalyMarkup" className="markupBody">
         {txt}
         </div>
+        <div className="clearBlock">
+          <button className="btn" onClick={() => {clearMarkup(value, markup)}}>Clear Markup</button>
+        </div>
+
         </Col>
       </Row>
+      <NoteEditor value={value} markup={markup} />
     </Container>
   )
   

@@ -2,22 +2,26 @@ import { useState } from 'react';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import TextStyle from '@tiptap/extension-text-style';
-import { EditorContent, Editor } from '@tiptap/react';
+import { EditorContent, Editor, Extension } from '@tiptap/react';
+import { Plugin, PluginKey } from '@tiptap/pm/state'
 import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
 import StarterKit from '@tiptap/starter-kit';
 import {Bold, Italic, IUnderline, Strikethrough, CodeBlock, Blockquote, Undo, BulletList, NumList, Clear, Paragraph, TextSize, Note, Trash, AddLink} from './Icons'
 import { splitAuthors } from './utils.js';
 import { Col, Row } from 'react-bootstrap';
+import { Modal } from 'bootstrap'
 
     const updateMarkup = function(value, markup){
+        localStorage.setItem('tsk-value', JSON.stringify(value));
+
         let newMarkup = {"title":value.paperName,
             "authors": splitAuthors(value.paperAuthor),
             "abstract":value.abstract,
             "content":value.article,
             "submissionBy":{"name":value.submitName,"link":value.submitLink},
-            "notes":[],      //{"text":"",id:0}
-            "references":[], //{"cite":"","doi":""} Grab references from value.doi
+            "notes":value.notes,      //{"text":"",id:0}
+            "references":value.references, //{"cite":"","doi":""} Grab references from value.doi
             "works":[]       //{"title":"","link":""}
         }
         markup.current = newMarkup
@@ -47,19 +51,8 @@ import { Col, Row } from 'react-bootstrap';
             console.log(error)
             return
         }finally{
-
-        let newMarkup = {"title":value.paperName,
-            "authors": splitAuthors(value.paperAuthor),
-            "abstract":value.abstract,
-            "content":value.article,
-            "submissionBy":{"name":value.submitName,"link":value.submitLink},
-            "notes":[],      //{"text":"",id:0}
-            "references": references,
-            "works":[]       //{"title":"","link":""}
-        }
-        markup.current = newMarkup
-        const txt = JSON.stringify(markup.current, null, 2)
-        document.getElementById("dispalyMarkup").innerText = txt
+            value.reference = references
+            updateMarkup(value, markup)
         }
     }
 
@@ -76,7 +69,7 @@ import { Col, Row } from 'react-bootstrap';
 
 export function SubmitForm({value, markup}){
     const abstract = new Editor({
-        content: value.abstract,
+        content: value.current.abstract,
         extensions: [
             Underline,
             TextStyle.configure(),
@@ -95,9 +88,10 @@ export function SubmitForm({value, markup}){
     )
 
     const article = new Editor({
-        content: value.article,
+        content: value.current.article,
         extensions: [
             InlineNote,
+            NoteEdit,
             Underline,
             TextStyle.configure(),
             StarterKit.configure({
@@ -125,9 +119,49 @@ export function SubmitForm({value, markup}){
           <ToolBarNotes editor={article} value={value} markup={markup} />
           <EditorContent editor={article} />
           <br/>
-          <Links />
+          <Links value={value} />
     </>)
 }
+
+export const NoteEdit = Extension.create({
+    name: 'NoteEdit',
+  
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          key: new PluginKey('NoteEdit'),
+          props: {
+            handleDoubleClick(view, pos, event) { 
+                const id = event.target.id
+                if(id && id.slice(0,7) == "inline-"){
+                    const idx = id.slice(7, id.length)
+                    var note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
+                    document.getElementById("note-idx").value = idx;
+                    
+                    const value = JSON.parse(localStorage.getItem("tsk-value"))
+                    
+                    if (value==null || value.notes==null){
+                        note.show();
+                        return
+                    } 
+                    
+                    let text = ''
+                    for(let i = 0; i < value.notes.length; i++){
+                        if(value.notes[i].id === idx){
+                            text = value.notes[i].text
+                        } 
+                    }
+                    
+                    document.getElementById("note-body").value = text;
+                    note.show();
+                }
+
+            },
+          },
+        }),
+      ]
+    },
+  })
 
 
 const InlineNote = Highlight.extend( {
@@ -293,19 +327,23 @@ const ToolBarNormal = ({editor, value, markup }) => {
   }
 
 const ToolBarNotes = ({editor, value, markup }) => {
-    let noteIdx = 0
+    const notes = value.notes || []
+    const [noteIdx, setNoteIdx] = useState(notes.length || 0)
 
-    function crudNote(editor, noteIdx){
+    function crudNote(editor, noteIdx, setNoteIdx){
         if (editor.isActive('highlight')){
             //Removing note
             //Don't worry about decrementing noteIdx, more trouble then it's worth
             editor.chain().focus().toggleHighlight().run()
         }else{
             //Creating note
-            editor.chain().focus().command((noteIdx) => { editor.storage.idx = noteIdx}).toggleHighlight().run()
-            noteIdx += 1
+            editor.storage.highlight.idx = noteIdx
+            editor.chain().focus().toggleHighlight().run()
             //Launch modal
-            alert("HELLO!")
+            var note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
+            document.getElementById("note-idx").value = noteIdx;
+            note.show();
+            setNoteIdx(noteIdx + 1)
         }
     }
   
@@ -415,7 +453,7 @@ const ToolBarNotes = ({editor, value, markup }) => {
           <Blockquote iconClass={editor.isActive('blockquote') ? 'active' : ''} />
         </button>
         <button
-          onClick={() => crudNote(editor, noteIdx)}
+          onClick={() => crudNote(editor, noteIdx, setNoteIdx)}
           className="btn"
         >
           <Note iconClass={editor.isActive('highlight') ? 'active' : ''} />
@@ -439,7 +477,7 @@ const ToolBarNotes = ({editor, value, markup }) => {
         >
           <Clear />
         </button>
-        <button onClick={() => updateValuesFromEditor(editor, "article", value, markup)}
+        <button id="toolbarNoteGenerate" onClick={() => updateValuesFromEditor(editor, "article", value, markup)}
         className="btn btn-outline"
         >
           Generate
@@ -448,6 +486,64 @@ const ToolBarNotes = ({editor, value, markup }) => {
       </div>
     )
   }
+
+export function NoteEditor({value, markup}){
+    const closeModal = function (){
+        const note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
+        document.getElementById('note-body').value = "";
+        note.hide();
+    }
+
+    const submitNote = function(value,markup){
+        const note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
+        const idx = document.getElementById('note-idx').value
+        const val = document.getElementById('note-body').value
+        var update = false
+
+        const notes = value.notes.map(n => {
+            if(n.id == idx){
+                n.text = val
+                update = true
+            }
+            return n
+        })
+
+        if (!update){
+            notes.push({"id":idx, "text":val})
+        }
+
+        value.notes = notes
+        updateMarkup(value, markup)
+
+        document.getElementById('toolbarNoteGenerate').click() //Trigger an update to the article markup too
+
+        document.getElementById('note-body').value = "";
+        note.hide()
+    }
+
+    return(
+    <div class="modal fade" id="noteEditor" tabindex="-1" role="dialog" aria-labelledby="noteEditor" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="noteEditor">Add a Note</h5>
+        <input type="hidden" id="note-idx"/>
+        <button type="button" class="btn close" data-dismiss="modal" aria-label="Close" onClick={closeModal}>
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <textarea id="note-body" row="10"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" onClick={closeModal}>Cancel</button>
+        <button type="button" class="btn btn-primary" onClick={() => {submitNote(value.current ,markup)}}>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+    )
+}
   
 export function ArticleMetaData({value, markup}){
     const handleChange = (event) => {
@@ -479,35 +575,36 @@ export function ArticleMetaData({value, markup}){
     return (
         <>
         <div class="input-group my-2">
-            <input class="form-control form-control-lg" type="text" id="paperName" name="paperName" placeholder="Name of paper" onBlur={handleChange} />
+            <input class="form-control form-control-lg" type="text" id="paperName" name="paperName" placeholder="Name of paper" onBlur={handleChange} defaultValue={value.current.paperName} />
             </div>
             <div class="input-group my-2">
-            <input class="form-control form-control-lg" type="text" id="paperAuthor" name="paperAuthor" placeholder="Author(s) comma seperated" onBlur={handleChange}/>
+            <input class="form-control form-control-lg" type="text" id="paperAuthor" name="paperAuthor" placeholder="Author(s) comma seperated" onBlur={handleChange} defaultValue={value.current.paperAuthor}/>
             </div>
             <div class="input-group my-2">
-            <input class="form-control form-control-lg" type="text" id="doi" name="doi" placeholder="DOI Number" onBlur={handleChange} />
+            <input class="form-control form-control-lg" type="text" id="doi" name="doi" placeholder="DOI Number" onBlur={handleChange} defaultValue={value.current.doi} />
             </div>
             <div class="input-group my-1">
-            <input class="form-control form-control-lg" type="text" id="submitName" name="submitName" placeholder="Your Name" onBlur={handleChange} />
+            <input class="form-control form-control-lg" type="text" id="submitName" name="submitName" placeholder="Your Name" onBlur={handleChange} defaultValue={value.current.submitName} />
             </div>
             <div class="input-group mb-3">
   <div class="input-group-prepend">
     <span class="input-group-text">https://</span>
   </div>
-  <input type="text" class="form-control" aria-label="link to submitter's profile" id="submitLink" name="submitLink" placeholder="Link back to you" onBlur={handleChange}/>
+  <input type="text" class="form-control" aria-label="link to submitter's profile" id="submitLink" name="submitLink" placeholder="Link back to you" onBlur={handleChange} defaultValue={value.current.submitLink}/>
 </div>
         </>
     )
 }
 
 
-const Links = ({}) => {
-    const [inputFields, setInputFields] = useState([
-        {link_title: '', link_url: ''}
-    ])
+const Links = ({value}) => {
+    
+    const [inputFields, setInputFields] = useState(value.current.links 
+        || [{link_title: '', link_url: ''}])
 
-    const handleFormChange = (index, event) => {
+    const handleFormChange = (event) => {
         let data = [...inputFields];
+        let index = parseInt(event.target.getAttribute("data-key"))
         data[index][event.target.name] = event.target.value;
         setInputFields(data);
      }
@@ -536,19 +633,23 @@ const Links = ({}) => {
           </Row>
             {inputFields.map((input, index) => {
               return (
-                <div class="input-group my-2" key={index}>
+                <div class="input-group my-2">
                   <input
                     class="form-control form-control-lg"
                     type="text"
-                    name='name'
+                    name='link_title'
                     placeholder='Title'
+                    data-key={index}
+                    defaultValue={input.link_title}
                     onBlur={handleFormChange}
                   />
                   <input
                     class="form-control form-control-lg"
                     type="text"
-                    name='age'
+                    name='link_url'
                     placeholder='URL'
+                    data-key={index}
+                    defaultValue={input.link_url}
                     onBlur={handleFormChange}
                   />
                   <div class="input-group-append">
