@@ -1,6 +1,5 @@
 import {useState, useRef} from 'react';
-import { Routes, Route, Outlet } from "react-router-dom";
-import HighlightPop from 'react-highlight-pop';
+import { Routes, Route, Outlet, useParams, useNavigate } from "react-router-dom";
 import Container from 'react-bootstrap/Container';
 import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row';
@@ -10,10 +9,11 @@ import Navbar from 'react-bootstrap/Navbar';
 import Notes from './Notes.js';
 import { Interweave } from 'interweave';
 import { CopyIcon } from './Icons.js';
-import { NoteEditor, SubmitForm } from './Editor.js';
+import { NoteEditor, SubmitForm, ClearForm } from './Editor.js';
 
-import article from './mock/article.json';
 import './App.css';
+
+const API = "https://raw.githubusercontent.com/mbellotti/tech-should-know-data/main/"
 
 
 function Annotation({idx, item}) {
@@ -30,7 +30,7 @@ function Annotation({idx, item}) {
         >
           <Card.Body>
             <Card.Text>
-            {item.text}
+            <Interweave content={item.text} />
             </Card.Text>
           </Card.Body>
         </Card>
@@ -64,6 +64,22 @@ function Article({text}){
 }
 
 function Content(){
+  const { uuid } = useParams();
+  const url = API + "articles/" +uuid + ".json";
+  const [article, setArticle] = useState({"notes":[], "authors":[]});
+  const [request, setRequest] = useState(true);
+
+  const getData = async() => {
+    const api_call = await fetch(url);
+    const data = await api_call.json();
+    setArticle(data)
+    setRequest(false)
+  }
+  
+  if (request) {
+    getData();
+  }
+
   const notes = article.notes.map((d,idx) =>
       <Annotation idx={idx} item={d}/>
     )
@@ -80,10 +96,8 @@ function Content(){
           <center><h1>{article.title}</h1>
           <Authors authors={article.authors} />
           </center>
-          <HighlightPop>
           <Abstract text={article.abstract} />
           <Article text={article.content}></Article>
-          </HighlightPop>
         </Col>
         <Col sm={3} className='notes'>
           {right}
@@ -118,6 +132,24 @@ function Layout() {
 }
 
 function Home(){
+  const navigate = useNavigate();
+  const url = API + "index.json";
+  const [request, setRequest] = useState(true);
+
+  const getData = async() => {
+    const api_call = await fetch(url);
+    const data = await api_call.json();
+    const a = data.articles[Math.floor(Math.random() * data.articles.length)];
+
+    setRequest(false)
+    const uri = "items/"+a.uri
+    navigate(uri);
+  }
+  
+  if (request) {
+    getData();
+  }
+
   return (
     <Container fluid>
       <Row>
@@ -126,9 +158,7 @@ function Home(){
         <Col sm={6} className="content">
           <center><h1>Tech Should Know</h1>
           <h2>social science for software people</h2></center>
-         <p>Computers haven't been purely about computating in a long time. Modern computers shape how we interact with each other and the world around us. They define how we discover information, what we buy, how we think about our lives ... all things that social science has spent decades researching.</p>
-         <p>There's a lot that social scientists know that software people are forced to learn via trial and error. And yet, how is any practitioner supposed to find nudgets of insight spread out across so many different disciplines?</p>
-         <p>This is a primary on some of the best and most relevant research for software people. Things that will make you think differently about how you build your systems, how you run them and what they do in the first place.</p>
+         
         </Col>
         <Col sm={3} className='notes'>
         </Col>
@@ -147,7 +177,11 @@ function About(){
         <Col sm={8} className="content">
           <center><h1>Tech Should Know</h1>
           <h2>social science for software people</h2></center>
-          <h3 className="mt-5">Who's Responsible For This?</h3>
+          <h3 className="mt-5">What Is This?</h3>
+          <p>Computers haven't been purely about computating in a long time. Modern computers shape how we interact with each other and the world around us. They define how we discover information, what we buy, how we think about our lives ... all things that social science has spent decades researching.</p>
+         <p>There's a lot that social scientists know that software people are forced to learn via trial and error. And yet, how is any practitioner supposed to find nudgets of insight spread out across so many different disciplines?</p>
+         <p>This is a primer on some of the best and most relevant research for software people. Things that will make you think differently about how you build your systems, how you run them and what they do in the first place.</p>
+          <h3>Who's Responsible For This?</h3>
           <img src="/84338978_148269803308700_513760480813693438_n.jpg" width="350" height="300" className="m-3"/>
           <p>TSK is mainly a product of <a href="https://www.linkedin.com/in/bellmar/">Marianne Bellotti's</a> sheer stubbornness. She got sick of constantly being told that STEM people don't value social sciences by people who were not in STEM in the first place. At the same time, software engineers were constantly telling her "this is interesting, you should write a book about this."</p>
           <p>Well ... the book may one day happen. But for the time being it seemed like more fun to help connect technical people with new schools of thought. Point them in the right direction and let them go exploring!</p>
@@ -158,6 +192,9 @@ function About(){
           <p>Here's a non-ordered, chaotically neutral list of all the people who have graciously added annotated papers to the collection</p>
           */}
           <p><small>Want to see your name here? <a href="/submit">Submit an annotated paper!</a></small></p>
+          <h3>What Types of Papers?</h3>
+          <p>First and foremost, papers must be from a <em><u>social science</u></em> perspective. There are many amazing math and computer science papers out there that of course all technical people would benefit from reading, but the goal of this project is to expose technologists to schools of thought and bodies of knowledge that they <strong>WOULD NOT</strong> otherwise be exposed to because they belong to a "non-technical" field or discipline. If you're looking for great math and CS papers, <a href="https://paperswelove.org/">Papers We Love</a> never fails to deliver.</p>
+          <p>I also prefer that the paper in question be freely available for download through some legitimate means. The means a university site, the author's CV, or any number of open science repos, not Sci-hub (although I do love Sci-hub). While the whole concept of this site is to post articles with commentary/analysis (and therefore fair use), I'd like to be able to link back to the original paper if for no other reason than it helps people discover more works by the same author or colleagues in the space.</p>
          <h3>What Else?</h3>
          <p>Icons by <a href="https://thenounproject.com/grega.cresnar/">Grega Cresnar</a> and <a href="https://thenounproject.com/ArtZ91/">Arthur Shlain</a></p>
          </Col>
@@ -169,11 +206,53 @@ function About(){
 }
 
 function Reading(){
-  
+  return(
+    <Outlet />
+  )
 }
 
+
 function List(){
+  const url = API + "index.json";
+  const [masterlist, setMasterlist] = useState({"articles":[], "tags":[]});
+  const [request, setRequest] = useState(true);
+
+  const getData = async() => {
+    const api_call = await fetch(url);
+    const data = await api_call.json();
+    setMasterlist(data)
+    setRequest(false)
+  }
   
+  if (request) {
+    getData();
+  }
+
+   return (
+    <Container fluid>
+      <Row>
+        <Col sm={2} className='notes'>
+        </Col>
+        <Col sm={8} className="content">
+          <center><h1>Tech Should Know</h1>
+          <h2>social science for software people</h2></center>
+          <h3 className="mt-5">The Master List</h3>
+          <ArticleList articles={masterlist.articles} />
+          </Col>
+        <Col sm={2} className='notes'>
+        </Col>
+      </Row>
+    </Container>
+  )
+}
+
+function ArticleList({articles}){
+  const a = articles.map((article) => <li><a href={"items/" + article.uri}>{article.title}</a></li>)
+  return (
+    <ul>
+      {a}
+    </ul>
+  )
 }
 
 function Submit(){
@@ -216,7 +295,8 @@ const markup = useRef({"title":"",
     "submissionBy":{"name":"","link":""},
     "notes":[],
     "references":[],
-    "works":[]
+    "works":[],
+    "tags":[],
   } 
 
     value.current = {"paperName":"",
@@ -228,11 +308,13 @@ const markup = useRef({"title":"",
     "doi":"",
     "references":[],
     "notes":[],
-    "links":[]
+    "links":[],
+    "tags": [],
   }
 
     localStorage.removeItem('tsk-value')
     document.getElementById("dispalyMarkup").innerText = JSON.stringify(markup, null, 2)
+    ClearForm();
 }
 
   const copyMarkup = () => {
@@ -275,7 +357,24 @@ const markup = useRef({"title":"",
 }
 
 function NoMatch(){
-
+  return (
+    <Container fluid>
+      <Row>
+        <Col sm={2} className='notes'>
+        </Col>
+        <Col sm={8} className="content">
+          <center><h1>Tech Should Know</h1>
+          <h2>social science for software people</h2>
+          <br />
+          <br />
+          <p>404 - Nothing is here :(</p>
+          </center>
+          </Col>
+        <Col sm={2} className='notes'>
+        </Col>
+      </Row>
+    </Container>
+  )
 }
 
 function App(){
@@ -283,9 +382,9 @@ function App(){
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
-          <Route path="item" element={<Reading />}>
+          <Route path="items" element={<Reading />}>
             <Route index element={<List />} />
-            <Route path="item/:uuid" element={<Content />} />
+            <Route path=":uuid" element={<Content />} />
           </Route>
           <Route path="submit" element={<Submit />} />
           <Route path="*" element={<NoMatch />} />

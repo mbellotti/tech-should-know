@@ -12,12 +12,18 @@ class Notes extends Component {
     alignNotes = () => {
         let boundary = this.props.top
         let inline = document.querySelector(boundary)
-        let pos = inline.getBoundingClientRect();
-        this.setState({top: pos.top+window.scrollY});
+        if(inline){
+            let pos = inline.getBoundingClientRect();
+            this.setState({top: pos.top+window.scrollY});
+        }
     }
 
     componentDidMount(){
         window.addEventListener('resize', this.alignNotes);
+        this.alignNotes();
+    }
+
+    refreshPage(){
         this.alignNotes();
     }
 

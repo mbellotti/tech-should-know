@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import TextStyle from '@tiptap/extension-text-style';
-import { EditorContent, Editor, Extension } from '@tiptap/react';
+import { EditorContent, Editor, Extension, getAttributes } from '@tiptap/react';
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
@@ -11,6 +11,18 @@ import {Bold, Italic, IUnderline, Strikethrough, CodeBlock, Blockquote, Undo, Bu
 import { splitAuthors } from './utils.js';
 import { Col, Row } from 'react-bootstrap';
 import { Modal } from 'bootstrap'
+import { Tag, TagGroup, Input } from 'rsuite';
+
+    let NoteId = 0
+    const setNoteId = function(id){
+        NoteId = id
+    }
+    const incrementNoteId = function(){
+          NoteId += 1
+    }
+    const getNoteId = function(){
+        return NoteId.valueOf()
+    }
 
     const updateMarkup = function(value, markup){
         localStorage.setItem('tsk-value', JSON.stringify(value));
@@ -22,7 +34,8 @@ import { Modal } from 'bootstrap'
             "submissionBy":{"name":value.submitName,"link":value.submitLink},
             "notes":value.notes,      //{"text":"",id:0}
             "references":value.references, //{"cite":"","doi":""} Grab references from value.doi
-            "works":[]       //{"title":"","link":""}
+            "works":value.links,       //{"title":"","link":""}
+            "tags":value.tags
         }
         markup.current = newMarkup
         const txt = JSON.stringify(markup.current, null, 2)
@@ -30,8 +43,8 @@ import { Modal } from 'bootstrap'
     }
 
     const validDOI = function(doi){
-        const r = new RegExp("/^10.\d{4,9}/[-._;()/:A-Z0-9]+$/i", "g")
-        return r.test(doi)
+        const r = /10.\d{4,9}\/[-._;()/:A-Z0-9]+/gi
+        return doi.match(r) != null
     }
 
     async function getReferences(value, markup){
@@ -44,14 +57,17 @@ import { Modal } from 'bootstrap'
         const response = await fetch(url);
         try{
             const data = await response.json(); //If not available returns "Resource not found."
-            references = data["message"]["reference"].map(r => {
-                return({"cite":r["article-title"], "doi":r["key"]})
+            references = data["message"]["reference"]
+            .filter(r=>validDOI(r["doi"])) // No DOI, throw out
+            .map(r => {
+                let title = r["article-title"] || r["volume-title"]
+                return({"cite":title, "doi":r["key"]})
             });
         }catch(error){
             console.log(error)
             return
         }finally{
-            value.reference = references
+            value.references = references
             updateMarkup(value, markup)
         }
     }
@@ -62,10 +78,18 @@ import { Modal } from 'bootstrap'
                 value.current.abstract = editor.getHTML()
                 break;
             case "article":
-                value.current.article = editor.getHTML()
+                //value.current.article = editor.getHTML()
+                // Prose Mirror renderHTML is reseting note ids. So we're going to bypass it here.
+                value.current.article = document.getElementById("noteArea").children[0].children[0].innerHTML
         }
         updateMarkup(value.current, markup)
     }
+
+export function ClearForm(){
+    document.getElementById("generator").reset();
+    Array.from(document.getElementsByClassName("ql-editor")).forEach((el) => { el.innerHTML = "" })
+    Array.from(document.getElementsByClassName("links")).forEach((el) => { el.value = "" })
+}
 
 export function SubmitForm({value, markup}){
     const abstract = new Editor({
@@ -107,20 +131,24 @@ export function SubmitForm({value, markup}){
           ],
     })
 
-    return(<>
+    return(<form id="generator">
         <h4>Article Metadata</h4>
           <ArticleMetaData value={value} markup={markup} />
-          <br/>
+          <h4>Tags</h4>
+          <div class="input-group my-2 tag-area"><Tags value={value} markup={markup} /></div>
+          <br />
           <h4>Abstract</h4>
           <ToolBarNormal editor={abstract} value={value} markup={markup} />
           <EditorContent editor={abstract} />
           <br/>
           <h4>Article Text</h4>
           <ToolBarNotes editor={article} value={value} markup={markup} />
+          <div id="noteArea">
           <EditorContent editor={article} />
+          </div>
           <br/>
-          <Links value={value} />
-    </>)
+          <Links value={value} markup={markup} />
+    </form>)
 }
 
 export const NoteEdit = Extension.create({
@@ -166,11 +194,6 @@ export const NoteEdit = Extension.create({
 
 const InlineNote = Highlight.extend( {
     priority: 1000,
-    addStorage() {
-        return {
-          idx: 0,
-        }
-      },
     addAttributes() {
         return {
           ...this.parent?.(),
@@ -179,10 +202,16 @@ const InlineNote = Highlight.extend( {
             // Take the attribute values
             renderHTML: attributes => {
               // … and return an object with HTML attributes.
+              if(attributes.id != ""){
+                return {
+                  id: attributes.id
+                }
+              }
               return {
-                id: `inline-${this.storage.idx}`,
+                id: `inline-${getNoteId()}`,
               }
             },
+            parseHTML: element => element.getAttribute('id'),
           },
           class:{
             default: "inlineNote",
@@ -196,18 +225,18 @@ const ToolBarNormal = ({editor, value, markup }) => {
       <div class="editor justify-content-between">
         <ButtonToolbar className="mb-3" aria-label="Text editor toolbar">
         <div class="dropdown">
-        <button class="btn dropdown-toggle" type="button" id="heading" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button class="btn dropdown-toggle" type="button" id="heading" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={(e)=>{e.preventDefault()}}>
             <TextSize />
         </button>
             <div class="dropdown-menu" aria-labelledby="heading">
-                <a class="dropdown-item" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>H1</a>
-                <a class="dropdown-item" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</a>
-                <a class="dropdown-item" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>H3</a>
+                <a class="dropdown-item" onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleHeading({ level: 1 }).run()}}>H1</a>
+                <a class="dropdown-item" onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run()}}>H2</a>
+                <a class="dropdown-item" onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run()}}>H3</a>
             </div>
         </div>
         <ButtonGroup className="me-2" aria-label="Text style">
         <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleBold().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -220,7 +249,7 @@ const ToolBarNormal = ({editor, value, markup }) => {
           <Bold iconClass={editor.isActive('bold') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleItalic().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -233,7 +262,7 @@ const ToolBarNormal = ({editor, value, markup }) => {
           <Italic iconClass={editor.isActive('italic') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleUnderline().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -246,7 +275,7 @@ const ToolBarNormal = ({editor, value, markup }) => {
           <IUnderline iconClass={editor.isActive('underline') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleStrike().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -261,7 +290,7 @@ const ToolBarNormal = ({editor, value, markup }) => {
         </ButtonGroup>
         <ButtonGroup className="me-2" aria-label="Block style">
         <button
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleCode().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -274,32 +303,32 @@ const ToolBarNormal = ({editor, value, markup }) => {
           <CodeBlock iconClass={editor.isActive('code') ? 'active' : ''} />
         </button>
         <button
-          onClick={() => editor.chain().focus().setParagraph().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().setParagraph().run()}}
           className="btn"
         >
         <Paragraph iconClass={editor.isActive('paragraph') ? 'is-active' : ''} />
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleBulletList().run()}}
           className="btn"
         >
           <BulletList iconClass={editor.isActive('bulletList') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleOrderedList().run()}}
           className="btn"
         >
           <NumList iconClass={editor.isActive('orderedList') ? 'active' : ''} />
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleBlockquote().run()}}
           className="btn"
         >
           <Blockquote iconClass={editor.isActive('blockquote') ? 'active' : ''} />
         </button>
         </ButtonGroup>
         <button
-          onClick={() => editor.chain().focus().undo().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().undo().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -311,15 +340,15 @@ const ToolBarNormal = ({editor, value, markup }) => {
         >
           <Undo iconClass={''} />
         </button>
-        <button onClick={() => editor.chain().focus().unsetAllMarks().run()}
+        <button onClick={(e) => {e.preventDefault(); editor.chain().focus().unsetAllMarks().run()}}
         className="btn"
         >
           <Clear />
         </button>
-        <button onClick={() => updateValuesFromEditor(editor, "abstract", value, markup)}
+        <button onClick={(e) => {e.preventDefault(); updateValuesFromEditor(editor, "abstract", value, markup)}}
         className="btn btn-outline"
         >
-          Generate
+          Save
         </button>
         </ButtonToolbar>
       </div>
@@ -327,23 +356,21 @@ const ToolBarNormal = ({editor, value, markup }) => {
   }
 
 const ToolBarNotes = ({editor, value, markup }) => {
-    const notes = value.notes || []
-    const [noteIdx, setNoteIdx] = useState(notes.length || 0)
+    const notes = value.current.notes || []
+    setNoteId(notes.length)
 
-    function crudNote(editor, noteIdx, setNoteIdx){
+    function crudNote(editor){
         if (editor.isActive('highlight')){
             //Removing note
             //Don't worry about decrementing noteIdx, more trouble then it's worth
             editor.chain().focus().toggleHighlight().run()
         }else{
             //Creating note
-            editor.storage.highlight.idx = noteIdx
             editor.chain().focus().toggleHighlight().run()
             //Launch modal
             var note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
-            document.getElementById("note-idx").value = noteIdx;
+            document.getElementById("note-idx").value = getNoteId();
             note.show();
-            setNoteIdx(noteIdx + 1)
         }
     }
   
@@ -351,18 +378,18 @@ const ToolBarNotes = ({editor, value, markup }) => {
       <div class="editor justify-content-between">
         <ButtonToolbar className="mb-3" aria-label="Text editor toolbar">
         <div class="dropdown">
-        <button class="btn dropdown-toggle" type="button" id="heading" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button class="btn dropdown-toggle" type="button" id="heading" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={(e)=>{e.preventDefault()}}>
             <TextSize />
         </button>
             <div class="dropdown-menu" aria-labelledby="heading">
-                <a class="dropdown-item" href="#" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>H1</a>
-                <a class="dropdown-item" href="#" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</a>
-                <a class="dropdown-item" href="#" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>H3</a>
+                <a class="dropdown-item" href="#" onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleHeading({ level: 1 }).run()}}>H1</a>
+                <a class="dropdown-item" href="#" onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run()}}>H2</a>
+                <a class="dropdown-item" href="#" onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run()}}>H3</a>
             </div>
         </div>
         <ButtonGroup className="me-2" aria-label="Text style">
         <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleBold().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -375,7 +402,7 @@ const ToolBarNotes = ({editor, value, markup }) => {
           <Bold iconClass={editor.isActive('bold') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleItalic().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -388,7 +415,7 @@ const ToolBarNotes = ({editor, value, markup }) => {
           <Italic iconClass={editor.isActive('italic') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleUnderline().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -401,7 +428,8 @@ const ToolBarNotes = ({editor, value, markup }) => {
           <IUnderline iconClass={editor.isActive('underline') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
+          onClick={(e) => {e.preventDefault();
+            editor.chain().focus().toggleStrike().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -416,7 +444,8 @@ const ToolBarNotes = ({editor, value, markup }) => {
         </ButtonGroup>
         <ButtonGroup className="me-2" aria-label="Block style">
         <button
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onClick={(e) => {e.preventDefault();
+            editor.chain().focus().toggleCode().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -429,38 +458,38 @@ const ToolBarNotes = ({editor, value, markup }) => {
           <CodeBlock iconClass={editor.isActive('code') ? 'active' : ''} />
         </button>
         <button
-          onClick={() => editor.chain().focus().setParagraph().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().setParagraph().run()}}
           className="btn"
         >
         <Paragraph iconClass={editor.isActive('paragraph') ? 'is-active' : ''} />
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleBulletList().run()}}
           className="btn"
         >
           <BulletList iconClass={editor.isActive('bulletList') ? 'active' : ''}/>
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleOrderedList().run()}}
           className="btn"
         >
           <NumList iconClass={editor.isActive('orderedList') ? 'active' : ''} />
         </button>
         <button
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().toggleBlockquote().run()}}
           className="btn"
         >
           <Blockquote iconClass={editor.isActive('blockquote') ? 'active' : ''} />
         </button>
         <button
-          onClick={() => crudNote(editor, noteIdx, setNoteIdx)}
+          onClick={(e) => {e.preventDefault(); crudNote(editor)}}
           className="btn"
         >
           <Note iconClass={editor.isActive('highlight') ? 'active' : ''} />
         </button>
         </ButtonGroup>
         <button
-          onClick={() => editor.chain().focus().undo().run()}
+          onClick={(e) => {e.preventDefault(); editor.chain().focus().undo().run()}}
           disabled={
             !editor.can()
               .chain()
@@ -472,15 +501,15 @@ const ToolBarNotes = ({editor, value, markup }) => {
         >
           <Undo iconClass={''} />
         </button>
-        <button onClick={() => editor.chain().focus().unsetAllMarks().run()}
+        <button onClick={(e) => {e.preventDefault(); editor.chain().focus().unsetAllMarks().run()}}
         className="btn"
         >
           <Clear />
         </button>
-        <button id="toolbarNoteGenerate" onClick={() => updateValuesFromEditor(editor, "article", value, markup)}
+        <button id="toolbarNoteGenerate" onClick={(e) => {e.preventDefault(); updateValuesFromEditor(editor, "article", value, markup)}}
         className="btn btn-outline"
         >
-          Generate
+          Save
         </button>
         </ButtonToolbar>
       </div>
@@ -519,6 +548,7 @@ export function NoteEditor({value, markup}){
 
         document.getElementById('note-body').value = "";
         note.hide()
+        incrementNoteId();
     }
 
     return(
@@ -537,7 +567,7 @@ export function NoteEditor({value, markup}){
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal" onClick={closeModal}>Cancel</button>
-        <button type="button" class="btn btn-primary" onClick={() => {submitNote(value.current ,markup)}}>Save</button>
+        <button type="button" class="btn btn-primary" onClick={(e) => {submitNote(value.current ,markup)}}>Save</button>
       </div>
     </div>
   </div>
@@ -596,8 +626,73 @@ export function ArticleMetaData({value, markup}){
     )
 }
 
+const Tags = ({value, markup}) =>{
+  const [tags, setTags] = useState(value.current.tags || []);
+  const [typing, setTyping] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
-const Links = ({value}) => {
+  const splitTags = (tagInput) => {
+    let tagsGroup = tagInput.split(",");
+    return tagsGroup.map(t => t.toLowerCase().trim())
+  }
+
+  const removeTag = tag => {
+    const nextTags = tags.filter(item => item !== tag);
+    setTags(nextTags);
+    value.current.tags = nextTags
+    updateMarkup(value.current, markup)
+  };
+
+  const addTag = () => {
+    const nextTags = inputValue ? [...tags, ...splitTags(inputValue)] : tags;
+    setTags(nextTags);
+    setTyping(false);
+    setInputValue('');
+    value.current.tags = nextTags
+    updateMarkup(value.current, markup)
+  };
+
+  const handleButtonClick = (e) => {
+    e.preventDefault();
+    setTyping(true);
+  };
+
+  const renderInput = () => {
+    if (typing) {
+      return (
+        <Input
+          className="form-control form-control-sm"
+          size="xs"
+          style={{ width: 70 }}
+          value={inputValue}
+          onChange={setInputValue}
+          onBlur={addTag}
+          onPressEnter={addTag}
+        />
+      );
+    }
+
+    return (
+      <button
+        className="btn"
+        onClick={handleButtonClick}>
+          <AddLink /></button>
+    );
+  };
+  return (
+    <TagGroup>
+      {tags.map((item, index) => (
+        <Tag key={index} closable onClose={() => removeTag(item)}>
+          {item}
+        </Tag>
+      ))}
+      {renderInput()}
+    </TagGroup>
+  );
+};
+
+
+const Links = ({value, markup}) => {
     
     const [inputFields, setInputFields] = useState(value.current.links 
         || [{link_title: '', link_url: ''}])
@@ -607,16 +702,24 @@ const Links = ({value}) => {
         let index = parseInt(event.target.getAttribute("data-key"))
         data[index][event.target.name] = event.target.value;
         setInputFields(data);
+        value.links = data
+        updateMarkup(value, markup)
      }
 
-    const addLink = () => {
+    const addLink = (e) => {
+        e.preventDefault();
         let newfield = { link_title: '', link_url: '' }
-        setInputFields([...inputFields, newfield])
+        let data = [...inputFields, newfield]
+        value.links = data
+        updateMarkup(value, markup)
+        setInputFields(data)
     }
 
     const removeLink = (index) => {
         let data = [...inputFields];
         data.splice(index, 1)
+        value.links = data
+        updateMarkup(value, markup)
         setInputFields(data)
     }
 
@@ -635,7 +738,7 @@ const Links = ({value}) => {
               return (
                 <div class="input-group my-2">
                   <input
-                    class="form-control form-control-lg"
+                    class="form-control form-control-lg links"
                     type="text"
                     name='link_title'
                     placeholder='Title'
@@ -644,7 +747,7 @@ const Links = ({value}) => {
                     onBlur={handleFormChange}
                   />
                   <input
-                    class="form-control form-control-lg"
+                    class="form-control form-control-lg links"
                     type="text"
                     name='link_url'
                     placeholder='URL'
@@ -653,7 +756,7 @@ const Links = ({value}) => {
                     onBlur={handleFormChange}
                   />
                   <div class="input-group-append">
-                        <button class="btn" type="button" onClick={() => removeLink(index)}><Trash/></button>
+                        <button class="btn" type="button" onClick={(e) => {e.preventDefault(); removeLink(index)}}><Trash/></button>
                   </div>
                 </div>
               )

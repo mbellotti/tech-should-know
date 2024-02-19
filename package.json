@@ -18,10 +18,10 @@
     "react": "^18.2.0",
     "react-bootstrap": "^2.9.2",
     "react-dom": "^18.2.0",
-    "react-highlight-pop": "^1.0.2",
-    "react-quill": "^2.0.0",
     "react-router-dom": "^6.21.1",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
+    "react-wordcloud": "^1.0.5",
+    "rsuite": "^5.53.2",
     "shallowequal": "^1.1.0",
     "subscribe-ui-event": "^2.0.7",
     "web-vitals": "^2.1.4"
