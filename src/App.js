@@ -6,6 +6,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import WordCloud from 'react-d3-cloud';
 import Notes from './Notes.js';
 import { Interweave } from 'interweave';
 import { CopyIcon } from './Icons.js';
@@ -63,10 +64,49 @@ function Article({text}){
   )
 }
 
+function ExtraTags({tags}) {
+  const t = tags.map(tag => <span class="badge rounded-pill bg-secondary m-2"><a href={"../tag/"+tag}>{tag}</a></span>)
+  return(
+    <div className="tagGroup">
+      {t}
+    </div>
+  )
+}
+
+function Extras({references, works}) {
+  const r = references.map( ref => <li><a href={"https://www.doi.org/" + ref.doi}>{ref.cite}</a></li>)
+  const w = works.map( link => <li><a href={link.link_url}>{link.link_title}</a></li>)
+  
+  return(
+<div class="accordion accordion-flush" id="extra">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="extra-read-more-heading">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#extra-read-more" aria-expanded="true" aria-controls="extra-read-more">
+        Read More
+      </button>
+    </h2>
+    <div id="extra-read-more" class="accordion-collapse show" aria-labelledby="extra-read-more-heading" data-bs-parent="#extra">
+      <div class="accordion-body"><ul>{w}</ul></div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="extra-reference-heading">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#extra-reference" aria-expanded="false" aria-controls="extra-reference">
+        References
+      </button>
+    </h2>
+    <div id="extra-reference" class="accordion-collapse collapse" aria-labelledby="extra-reference-heading" data-bs-parent="#extra">
+      <div class="accordion-body"><ul>{r}</ul></div>
+    </div>
+  </div>
+</div>
+  )
+}
+
 function Content(){
   const { uuid } = useParams();
   const url = API + "articles/" +uuid + ".json";
-  const [article, setArticle] = useState({"notes":[], "authors":[]});
+  const [article, setArticle] = useState({"notes":[], "authors":[], "references":[], "works":[], "tags":[], "submissionBy":{"name":"", "link":""}});
   const [request, setRequest] = useState(true);
 
   const getData = async() => {
@@ -80,8 +120,8 @@ function Content(){
     getData();
   }
 
-  const notes = article.notes.map((d,idx) =>
-      <Annotation idx={idx} item={d}/>
+  const notes = article.notes.map((d) =>
+      <Annotation idx={d.id} item={d}/>
     )
   const left = notes.filter((_, idx) => idx % 2 === 0)
   const right = notes.filter((_, idx) => idx % 2 === 1)
@@ -98,6 +138,11 @@ function Content(){
           </center>
           <Abstract text={article.abstract} />
           <Article text={article.content}></Article>
+          <div className="my-3 px-5" id="submissionBy">
+            <em>annotated by <a href={article.submissionBy.link}>{article.submissionBy.name}</a></em>
+          </div>
+          <Extras references={article.references || []} works={article.works} />
+          <ExtraTags tags={article.tags} />
         </Col>
         <Col sm={3} className='notes'>
           {right}
@@ -127,6 +172,7 @@ function Layout() {
       </Container>
     </Navbar>
     <Outlet />
+    <footer className="mt-5"><small>Marianne Bellotti, 2024</small></footer>
     </Container>
   );
 }
@@ -211,6 +257,133 @@ function Reading(){
   )
 }
 
+function TagCloud({data}){
+  const navigate = useNavigate();
+  return (<WordCloud
+    data={data}
+    width={500}
+    height={150}
+    fontWeight="bold"
+    fontSize={(word) => word.value * 10}
+    spiral="rectangular"
+    rotate={0}
+    padding={5}
+    random={Math.random}
+   onWordClick={(event, d) => {
+      const uri = "../tag/"+d.text
+      navigate(uri);
+    }}
+    // onWordMouseOver={(event, d) => {
+    //   console.log(`onWordMouseOver: ${d.text}`);
+    // }}
+    // onWordMouseOut={(event, d) => {
+    //   console.log(`onWordMouseOut: ${d.text}`);
+    // }}
+  />)
+}
+
+function Profiles(){
+  const profiles = ["rasmussen", "halpern", "clark", "dekker"]
+  const p = profiles.map(pro => <a href={"../researcher/"+pro}><img src={"../img/"+pro+".jpg"} alt={pro}/></a>)
+  return(
+    <div className="profile-photo">
+      {p}
+    </div>
+  )
+}
+
+function TagPage(){
+  const url = API + "index.json";
+  const { tag } = useParams();
+  const [masterlist, setMasterlist] = useState({"articles":[]});
+  const [request, setRequest] = useState(true);
+
+  const getData = async() => {
+    const api_call = await fetch(url);
+    const data = await api_call.json();
+    let articles = []
+    for(var i=0; i < data.tags.length; i++){
+        if(data.tags[i].text === tag){
+          articles = data.tags[i].items
+          break
+        }
+    }
+    setMasterlist({"articles":articles})
+    setRequest(false)
+  }
+  
+  if (request) {
+    getData();
+  }
+
+   return (
+    <Container fluid>
+      <Row>
+        <Col sm={2} className='notes'>
+        </Col>
+        <Col sm={8} className="content">
+          <center><h1>Tech Should Know</h1>
+          <h2>social science for software people</h2></center>
+          <h3 className="mt-5">Tag: {tag}</h3>
+          <ArticleList articles={masterlist.articles} />
+          </Col>
+        <Col sm={2} className='notes'>
+        </Col>
+      </Row>
+    </Container>
+  )
+}
+
+function Profile(){
+  const url = API + "index.json";
+  const { name } = useParams();
+  const [masterlist, setMasterlist] = useState({"articles":[]});
+  const [request, setRequest] = useState(true);
+
+  const matchName = function(authors){
+    if(authors === undefined){
+      return false
+    }
+
+    for(var i=0; i < authors.length; i++){
+      let a = authors[i].toLowerCase()
+      if (a.includes(name)){
+          return true
+      }
+    }
+    return false
+  }
+
+  const getData = async() => {
+    const api_call = await fetch(url);
+    const data = await api_call.json();
+    const articles = data.articles.filter(t => matchName(t.authors))
+    setMasterlist({"articles":articles})
+    setRequest(false)
+  }
+  
+  if (request) {
+    getData();
+  }
+
+   return (
+    <Container fluid>
+      <Row>
+        <Col sm={2} className='notes'>
+        </Col>
+        <Col sm={8} className="content">
+          <center><h1>Tech Should Know</h1>
+          <h2>social science for software people</h2></center>
+          <h3 className="mt-5">Researcher: {name}</h3>
+          <ArticleList articles={masterlist.articles} />
+          </Col>
+        <Col sm={2} className='notes'>
+        </Col>
+      </Row>
+    </Container>
+  )
+}
+
 
 function List(){
   const url = API + "index.json";
@@ -236,6 +409,10 @@ function List(){
         <Col sm={8} className="content">
           <center><h1>Tech Should Know</h1>
           <h2>social science for software people</h2></center>
+          <h3 className="mt-5">By Tag</h3>
+          <TagCloud data={masterlist.tags} />
+          <h3 className="mt-5">Featured Researchers</h3>
+          <Profiles />
           <h3 className="mt-5">The Master List</h3>
           <ArticleList articles={masterlist.articles} />
           </Col>
@@ -277,11 +454,6 @@ const markup = useRef({"title":"",
   "references":[], //{"cite":"","doi":""}
   "works":[]       //{"title":"","link":""}
 });
-
-// var intervalId = window.setInterval(function(){
-//   const txt = JSON.stringify(markup.current, null, 2)
-//   document.getElementById("dispalyMarkup").innerText = txt
-// }, 1000);
 
   const txt = JSON.stringify(markup.current, null, 2)
 
@@ -332,7 +504,7 @@ const markup = useRef({"title":"",
         <Col sm={8} className="offset-md-2 content">
           <center><h1>Tech Should Know</h1>
           <h2>social science for software people</h2></center>
-          <p>Use this editor to generate the markup correctly then open a PR to <a href="">this repo</a></p>
+          <p>Use this editor to generate the markup correctly then open a PR to <a href="https://github.com/mbellotti/tech-should-know-data">this repo</a></p>
       </Col></Row>
       <Row><Col sm={7} className="mr-2 content">
         <SubmitForm value={value} markup={markup}/>
@@ -386,6 +558,8 @@ function App(){
             <Route index element={<List />} />
             <Route path=":uuid" element={<Content />} />
           </Route>
+          <Route path="tag/:tag" element={<TagPage />} />
+          <Route path="researcher/:name" element={<Profile />} />
           <Route path="submit" element={<Submit />} />
           <Route path="*" element={<NoMatch />} />
         </Route>
