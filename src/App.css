@@ -7,10 +7,6 @@ body {
   color: #000;
 }
 
-small {
-  font-size: .8rem;
-}
-
 #submissionBy{
   background-color: #fff;
   border-radius: 5px;
@@ -56,10 +52,6 @@ small {
   float:left;
   border-radius:8px;
   border:#FFB534 solid 8px;
-}
-
-h1, h2, h3{
-  font-weight:bold;
 }
 
 .navbar {
@@ -265,11 +257,6 @@ h1, h2, h3{
   max-height: 300px;
   overflow: auto;
 }
- /*
-.Prosemirror-content{
-  height: 300px;
-  overflow-y:"scroll";
-}*/
 
 .tiptap {
   background-color:#F4EAE0;
