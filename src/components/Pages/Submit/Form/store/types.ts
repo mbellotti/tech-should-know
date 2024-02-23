@@ -29,6 +29,7 @@ export type ArticleParams = {
   abstract?: string;
   article?: string;
   content?: string;
+  doi?: string;
   title?: string;
   authors?: string;
   submitName?: string;
