@@ -48,7 +48,11 @@ const Form: FC<{
     register,
     control,
     formState: { errors },
-  } = useForm<ArticleParams>();
+  } = useForm<ArticleParams>({
+    defaultValues: {
+      links: store.links,
+    },
+  });
 
   const abstractEditor = useTipTap(store.abstract);
   const articleEditor = useTipTap(store.article, true);
