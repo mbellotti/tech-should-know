@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react",
+    "strict": true
+  },
+  "types": [
+    "node",
+    "webpack-env" // here
+  ],
+  "include": ["**/*.ts", "**/*.tsx", "eslintrc.js"],
+  "exclude": ["node_modules"]
+}
