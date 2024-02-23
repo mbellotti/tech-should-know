@@ -58,6 +58,7 @@ const Form: FC<{
       <h4>Article Metadata</h4>
       <div className="input-group my-2">
         <ReactHookInput
+          defaultValue={store.title}
           register={register}
           name={"title"}
           placeholder="Name of paper"
@@ -66,6 +67,7 @@ const Form: FC<{
       </div>
       <div className="input-group my-2">
         <ReactHookInput
+          defaultValue={store.authors.join(",")}
           register={register}
           name={"authors"}
           placeholder="Author(s) comma separated"
@@ -74,6 +76,7 @@ const Form: FC<{
       </div>
       <div className="input-group my-2">
         <ReactHookInput
+          defaultValue={store.submissionBy.name}
           register={register}
           name={"submitName"}
           placeholder="Your Name"
@@ -85,6 +88,7 @@ const Form: FC<{
           <span className="input-group-text">https://</span>
         </div>
         <ReactHookInput
+          defaultValue={store.submissionBy.link}
           register={register}
           name={"submitLink"}
           placeholder="Link back to you"

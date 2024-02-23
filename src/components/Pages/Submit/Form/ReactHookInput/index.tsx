@@ -4,6 +4,7 @@ import { Path, UseFormRegister, FieldValues } from "react-hook-form";
 
 interface ReactHookProps<T extends FieldValues> {
   className?: string;
+  defaultValue: string;
   placeholder: string;
   name: Path<T>;
   register: UseFormRegister<T>;
@@ -12,6 +13,7 @@ interface ReactHookProps<T extends FieldValues> {
 
 const ReactHookInput = <T extends FieldValues>({
   className,
+  defaultValue,
   name,
   placeholder,
   register,
@@ -22,6 +24,7 @@ const ReactHookInput = <T extends FieldValues>({
       type="text"
       className={className || "form-control form-control-lg"}
       placeholder={placeholder}
+      defaultValue={defaultValue}
       {...register(name, {
         onBlur: (e) => {
           onBlur({ [name]: e.target.value });
