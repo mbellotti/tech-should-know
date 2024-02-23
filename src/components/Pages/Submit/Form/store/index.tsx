@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { ArticleParams, ArticleStore, Tag } from "./types";
 
-export const useArticleStore = (articleProps?: ArticleStore) => {
+export const useArticleStore = (articleProps?: ArticleStore | null) => {
   const blank = {
     title: "",
     abstract: "",
@@ -22,25 +22,24 @@ export const useArticleStore = (articleProps?: ArticleStore) => {
   };
   const initialValue = articleProps || blank;
   const [article, setArticle] = useImmer<ArticleStore>(initialValue);
-  const [oldPermalink, setOldPermalink] = useState<string>();
 
   useEffect(() => {
-    if (article.permalink !== "") {
-      localStorage.setItem(article.permalink, JSON.stringify(article));
+    if (article) {
+      localStorage.setItem("tsk-value", JSON.stringify(article));
     }
   }, [article]);
 
-  useEffect(() => {
-    if (oldPermalink) {
-      localStorage.removeItem(oldPermalink);
-      setOldPermalink(undefined);
-    }
-  }, [oldPermalink]);
-
   const upsert = useCallback((update: ArticleParams) => {
     setArticle((draft) => {
-      const { authors, submitName, submitLink, links, tags, ...simpleProps } =
-        update;
+      const {
+        authors,
+        submitName,
+        submitLink,
+        links,
+        tags,
+        doi,
+        ...simpleProps
+      } = update;
       const simple = Object.keys(simpleProps) as Array<
         keyof typeof simpleProps
       >;

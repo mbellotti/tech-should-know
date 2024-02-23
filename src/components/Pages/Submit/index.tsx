@@ -4,9 +4,14 @@ import { useArticleStore } from "./Form/store";
 import Copy from "./Copy";
 import DisplayArticleMarkup from "./DisplayArticleMarkup";
 import Form from "./Form";
+import { ArticleStore } from "./Form/store/types";
 
 const Submit: FC = () => {
-  const [article, clear, upsert] = useArticleStore();
+  let stored: string | undefined | ArticleStore | null =
+    localStorage.getItem("tsk-value");
+  stored = stored ? (JSON.parse(stored) as ArticleStore) : undefined;
+
+  const [article, clear, upsert] = useArticleStore(stored);
   return (
     <Container fluid>
       <Row>

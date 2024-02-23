@@ -50,6 +50,7 @@ function Layout() {
       </footer>
     </Container>
   );
+}
 
 function App() {
   return (
