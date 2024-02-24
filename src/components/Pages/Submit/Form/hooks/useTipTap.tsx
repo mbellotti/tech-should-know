@@ -15,6 +15,7 @@ const InlineNote = Highlight.extend({
         default: "",
         // Take the attribute values
         renderHTML: (attributes: HTMLElement) => {
+          console.log(attributes);
           // … and return an object with HTML attributes.
           if (attributes.id != "") {
             return {
@@ -36,8 +37,15 @@ const InlineNote = Highlight.extend({
 
 export const NoteEdit = Extension.create({
   name: "NoteEdit",
+  addStorage() {
+    return {
+      id: null,
+    };
+  },
 
   addProseMirrorPlugins() {
+    const { editor } = this;
+
     return [
       new Plugin({
         key: new PluginKey("NoteEdit"),
@@ -46,28 +54,9 @@ export const NoteEdit = Extension.create({
             const id = event.target.id;
             if (id && id.slice(0, 7) == "inline-") {
               const idx = id.slice(7, id.length);
-              var note = Modal.getOrCreateInstance(
-                document.getElementById("noteEditor"),
-                { focus: false }
-              );
-              document.getElementById("note-idx").value = idx;
+              const event = new CustomEvent("showNote", { detail: idx });
 
-              const value = JSON.parse(localStorage.getItem("tsk-value"));
-
-              if (value == null || value.notes == null) {
-                note.show();
-                return;
-              }
-
-              let text = "";
-              for (let i = 0; i < value.notes.length; i++) {
-                if (value.notes[i].id === idx) {
-                  text = value.notes[i].text;
-                }
-              }
-
-              document.getElementById("note-body").value = text;
-              note.show();
+              document.dispatchEvent(event);
             }
           },
         },

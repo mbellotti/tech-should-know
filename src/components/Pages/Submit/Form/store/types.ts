@@ -35,5 +35,6 @@ export type ArticleParams = {
   submitName?: string;
   submitLink?: string;
   tags?: string[];
+  notes: Note[];
   links?: { link_title: string; link_url: string }[];
 };

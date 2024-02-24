@@ -1,5 +1,5 @@
 import { Editor } from "@tiptap/react";
-import { FC, Ref, useEffect, useState } from "react";
+import { FC, Ref, useCallback, useEffect, useState } from "react";
 import ButtonToolbar from "react-bootstrap/ButtonToolbar";
 import IconButton from "./IconButton";
 import React from "react";
@@ -20,26 +20,7 @@ import { ReactComponent as TextSize } from "../../../../../assets/icons/text_siz
 import { ReactComponent as Underline } from "../../../../../assets/icons/i_underline.svg";
 import { ReactComponent as Undo } from "../../../../../assets/icons/undo.svg";
 import { ArticleParams, Note } from "../store/types";
-
-function crudNote(editor: Editor, noteIdx: number) {
-  const noteEditor = document.getElementById("noteEditor");
-  if (noteEditor == null) return;
-  if (editor.isActive("highlight")) {
-    //Removing note
-    //Don't worry about decrementing noteIdx, more trouble then it's worth
-    editor.chain().focus().toggleHighlight().run();
-  } else {
-    //Creating note
-    editor.chain().focus().toggleHighlight().run();
-    //Launch modal
-    var note = Modal.getOrCreateInstance(noteEditor, { focus: false });
-    const node = document.getElementById("note-idx");
-    if (node) {
-      node.value = noteIdx;
-      note.show();
-    }
-  }
-}
+import NoteModal from "../Modal";
 
 const ToolbarNormal: FC<{
   editor: Editor;
@@ -49,11 +30,58 @@ const ToolbarNormal: FC<{
   notes?: Note[];
   showNote?: boolean;
 }> = ({ editor, name, notes, upsert, showNote }) => {
-  const [noteIdx, setNoteIdx] = useState(notes?.length || 0);
+  const [ephemeralNotes, setEphemeralNotes] = useState(notes || ([] as Note[]));
+  const [noteId, _setNoteId] = useState<number | undefined>(undefined);
+
+  const setNoteId = useCallback(
+    (id: number | undefined) => {
+      _setNoteId(id);
+    },
+    [_setNoteId]
+  );
+
+  const showNoteModal = useCallback(() => {
+    if (editor == null) return;
+    if (editor.isActive("highlight")) {
+      //Removing note
+      //Don't worry about decrementing noteIdx, more trouble then it's worth
+      editor.chain().focus().toggleHighlight().run();
+    } else {
+      //Creating note
+      editor.chain().focus().toggleHighlight().run();
+      setNoteId(notes?.length || 1);
+    }
+  }, [editor, ephemeralNotes.length, notes]);
+
+  const saveNote = useCallback(
+    (id: number, value: Note) => {
+      if (ephemeralNotes[id]) {
+        ephemeralNotes[id] = value;
+        notes = ephemeralNotes;
+      } else {
+        notes = [...ephemeralNotes, value];
+      }
+      setEphemeralNotes(notes);
+    },
+    [ephemeralNotes]
+  );
 
   useEffect(() => {
-    setNoteIdx(notes?.length || 0);
-  }, [notes]);
+    setNoteId(undefined);
+  }, [ephemeralNotes, setNoteId]);
+
+  useEffect(() => {
+    if (!showNote) {
+      return;
+    }
+    document.addEventListener("showNote", (e) => {
+      setNoteId(parseInt(e.detail));
+    });
+    return () =>
+      document.removeEventListener("showNote", (e) => {
+        setNoteId(parseInt(e.detail));
+      });
+  }, []);
 
   return (
     <div className="editor justify-content-between">
@@ -179,7 +207,7 @@ const ToolbarNormal: FC<{
             <button
               onClick={(e) => {
                 e.preventDefault();
-                crudNote(editor, noteIdx);
+                showNoteModal();
               }}
               className="btn"
             >
@@ -218,6 +246,13 @@ const ToolbarNormal: FC<{
         >
           Save
         </button>
+        <NoteModal
+          editor={editor}
+          id={noteId}
+          notes={ephemeralNotes}
+          saveNote={saveNote}
+          unsetId={setNoteId}
+        />
       </ButtonToolbar>
     </div>
   );

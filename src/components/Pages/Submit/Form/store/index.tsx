@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useImmer } from "use-immer";
-import { ArticleParams, ArticleStore, Tag } from "./types";
+import { ArticleParams, ArticleStore } from "./types";
 
 export const useArticleStore = (articleProps?: ArticleStore | null) => {
   const blank = {
@@ -31,15 +31,8 @@ export const useArticleStore = (articleProps?: ArticleStore | null) => {
 
   const upsert = useCallback((update: ArticleParams) => {
     setArticle((draft) => {
-      const {
-        authors,
-        submitName,
-        submitLink,
-        links,
-        tags,
-        doi,
-        ...simpleProps
-      } = update;
+      const { authors, submitName, submitLink, doi, ...simpleProps } = update;
+
       const simple = Object.keys(simpleProps) as Array<
         keyof typeof simpleProps
       >;
@@ -52,8 +45,6 @@ export const useArticleStore = (articleProps?: ArticleStore | null) => {
       if (authors) draft.authors = authors?.split(",").map((a) => a.trim());
       if (submitName) draft.submissionBy.name = submitName;
       if (submitLink) draft.submissionBy.link = submitLink;
-      if (links) draft.links = links;
-      if (tags) draft.tags = tags;
       return draft;
     });
   }, []);
