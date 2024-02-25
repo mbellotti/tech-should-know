@@ -269,6 +269,10 @@ body {
   width:100%;
 }
 
+.tag-area a {
+  background-color: transparent;
+}
+
 .tag-area {
   background: #fff;
   padding: 2px 2px 2px 10px;

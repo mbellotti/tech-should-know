@@ -9,7 +9,6 @@ import { EditorModal } from './components/Notes/Upsert.js';
 import { ClearForm } from './utils/form.js';
 
 export function Submit(){
-    console.log("HELLO!")
     const value = useRef(JSON.parse(localStorage.getItem('tsk-value')) ||  {"paperName":"",
     "paperAuthor":"",
     "submitName":"",
