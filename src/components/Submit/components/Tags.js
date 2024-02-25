@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { AddLink} from '../../Icons.js'
 import { Tag, TagGroup, Input } from 'rsuite';
 
-import { updateMarkup } from '../utils/form';
+import { updateMarkup, useForceUpdate } from '../utils/form';
 
 const splitTags = (tagInput) => {
   let tagsGroup = tagInput.split(",");
@@ -13,6 +13,7 @@ export const Tags = ({value, markup}) =>{
     let tags = value.current.tags || []
     const [isEditing, setEditing] = useState(false);
     const inputRef = useRef([])
+    const forceUpdate = useForceUpdate();
     //const [typing, setTyping] = useState(false);
     //const [inputValue, setInputValue] = useState('');
   
@@ -20,6 +21,7 @@ export const Tags = ({value, markup}) =>{
       tags = tags.filter(item => item !== tag);
       value.current.tags = tags
       updateMarkup(value.current, markup)
+      forceUpdate();
     };
 
     const addTag = useCallback( tag => {

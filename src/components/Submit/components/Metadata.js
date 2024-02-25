@@ -1,4 +1,5 @@
 import { updateMarkup } from '../utils/form';
+import { getReferences } from '../utils/doi';
 
 export function ArticleMetaData({value, markup}){
     const handleChange = (event) => {
