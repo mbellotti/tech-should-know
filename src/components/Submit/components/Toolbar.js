@@ -6,49 +6,28 @@ import { Modal } from 'bootstrap'
 import { getNoteId, setNoteId } from '../utils/notes.js';
 import { updateValuesFromEditor } from '../utils/form.js';
 
-const ToolBarButton = ({ additionalClasses, editor, fn, Icon, name }) => {
 
-//     <ToolBarButton
-//     name={"italic"}
-//     editor={editor}
-//     fn={"toggleItalic"}
-//     additionalClasses="editorIcon"
-//     Icon={Italic}
-//   />
-
-    let className = editor.isActive(name) ? "active" : "";
-    className += ` ${additionalClasses}`;
-    return (
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          editor.chain().focus()[fn]().run();
-        }}
-        disabled={!editor.can().chain().focus()[fn]().run()}
-        className="btn"
-      >
-        <Icon className={className} />
-      </button>
-    );
-  };
+function crudNote(editor){
+  if (editor.isActive('highlight')){
+      //Removing note
+      //Don't worry about decrementing noteIdx, more trouble then it's worth
+      editor.chain().focus().toggleHighlight().run()
+  }else{
+      //Creating note
+      editor.chain().focus().toggleHighlight().run()
+      //Launch modal
+      var note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
+      document.getElementById("note-idx").value = getNoteId();
+      note.show();
+  }
+}
 
 export const Toolbar = ({editor, value, markup, notesMode }) => {
-    const notes = value.current.notes || []
-    setNoteId(notes.length)
-
-    function crudNote(editor){
-        if (editor.isActive('highlight')){
-            //Removing note
-            //Don't worry about decrementing noteIdx, more trouble then it's worth
-            editor.chain().focus().toggleHighlight().run()
-        }else{
-            //Creating note
-            editor.chain().focus().toggleHighlight().run()
-            //Launch modal
-            var note = Modal.getOrCreateInstance(document.getElementById('noteEditor'), {"focus": false})
-            document.getElementById("note-idx").value = getNoteId();
-            note.show();
-        }
+    let editorType = "abstract"
+    if(notesMode){
+      const notes = value.current.notes || []
+      setNoteId(notes.length)
+      editorType = "article"
     }
   
     return (
@@ -158,12 +137,13 @@ export const Toolbar = ({editor, value, markup, notesMode }) => {
         >
           <Blockquote iconClass={editor.isActive('blockquote') ? 'active' : ''} />
         </button>
+        { notesMode === true &&
         <button
           onClick={(e) => {e.preventDefault(); crudNote(editor)}}
           className="btn"
         >
           <Note iconClass={editor.isActive('highlight') ? 'active' : ''} />
-        </button>
+        </button> }
         </ButtonGroup>
         <button
           onClick={(e) => {e.preventDefault(); editor.chain().focus().undo().run()}}
@@ -183,7 +163,7 @@ export const Toolbar = ({editor, value, markup, notesMode }) => {
         >
           <Clear />
         </button>
-        <button id="toolbarNoteGenerate" onClick={(e) => {e.preventDefault(); updateValuesFromEditor(editor, "article", value, markup)}}
+        <button id="toolbarNoteGenerate" onClick={(e) => {e.preventDefault(); updateValuesFromEditor(editor, editorType, value, markup)}}
         className="btn btn-outline"
         >
           Save
