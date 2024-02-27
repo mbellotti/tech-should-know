@@ -7,6 +7,7 @@ import { CopyIcon } from '../Icons.js';
 import { Submission } from './components/Form.js';
 import { EditorModal } from './components/Notes/Upsert.js';
 import { ClearForm } from './utils/form.js';
+import { valueToMarkup } from './utils/form.js';
 
 export function Submit(){
     const value = useRef(JSON.parse(localStorage.getItem('tsk-value')) ||  {"paperName":"",
@@ -21,15 +22,7 @@ export function Submit(){
     "links":[{link_title: '', link_url: ''}]
   });
   
-  const markup = useRef({"title":"",
-    "authors":[],
-    "abstract":"",
-    "content":"",
-    "submissionBy":{"name":"","link":""},
-    "notes":[],      //{"text":"",id:0}
-    "references":[], //{"cite":"","doi":""}
-    "works":[]       //{"title":"","link":""}
-  });
+    const markup = useRef(valueToMarkup(value.current));
   
     const txt = JSON.stringify(markup.current, null, 2)
   

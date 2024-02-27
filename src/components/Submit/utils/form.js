@@ -6,10 +6,8 @@ export function useForceUpdate() {
   return forceUpdate;
 }
 
-export const updateMarkup = function(value, markup){
-    localStorage.setItem('tsk-value', JSON.stringify(value));
-
-    let newMarkup = {"title":value.paperName,
+export const valueToMarkup = function(value){
+    return {"title":value.paperName,
         "authors": splitAuthors(value.paperAuthor),
         "abstract":value.abstract,
         "content":value.article,
@@ -19,8 +17,12 @@ export const updateMarkup = function(value, markup){
         "works":value.links,       //{"title":"","link":""}
         "tags":value.tags
     }
-    markup.current = newMarkup
-    const txt = JSON.stringify(markup.current, null, 2)
+}
+
+export const updateMarkup = function(value, markup){
+    localStorage.setItem('tsk-value', JSON.stringify(value));
+    markup = valueToMarkup(value)
+    const txt = JSON.stringify(markup, null, 2)
     document.getElementById("dispalyMarkup").innerText = txt
 }
 
@@ -34,7 +36,7 @@ export const updateValuesFromEditor = function (editor, key, value, markup){
                 // Prose Mirror renderHTML is reseting note ids. So we're going to bypass it here.
                 value.current.article = document.getElementById("noteArea").children[0].children[0].innerHTML
         }
-        updateMarkup(value.current, markup)
+        updateMarkup(value.current, markup.current)
     }
 
 export function ClearForm(){

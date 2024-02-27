@@ -53,7 +53,7 @@ export function EditorModal({value, markup}){
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal" onClick={closeModal}>Cancel</button>
-        <button type="button" class="btn btn-primary" onClick={(e) => {submitNote(value.current ,markup)}}>Save</button>
+        <button type="button" class="btn btn-primary" onClick={(e) => {submitNote(value.current ,markup.current)}}>Save</button>
       </div>
     </div>
   </div>

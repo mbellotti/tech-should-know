@@ -15,7 +15,7 @@ export const Links = ({value, markup}) => {
         data[index][event.target.name] = event.target.value;
         setInputFields(data);
         value.links = data
-        updateMarkup(value, markup)
+        updateMarkup(value.current, markup.current)
      }
 
     const addLink = (e) => {
@@ -23,7 +23,7 @@ export const Links = ({value, markup}) => {
         let newfield = { link_title: '', link_url: '' }
         let data = [...inputFields, newfield]
         value.links = data
-        updateMarkup(value, markup)
+        updateMarkup(value.current, markup.current)
         setInputFields(data)
     }
 
@@ -31,7 +31,7 @@ export const Links = ({value, markup}) => {
         let data = [...inputFields];
         data.splice(index, 1)
         value.links = data
-        updateMarkup(value, markup)
+        updateMarkup(value.current, markup.current)
         setInputFields(data)
     }
 

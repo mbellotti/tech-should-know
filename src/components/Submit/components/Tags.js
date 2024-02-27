@@ -20,7 +20,7 @@ export const Tags = ({value, markup}) =>{
     const removeTag = (tag, tags) => {
       tags = tags.filter(item => item !== tag);
       value.current.tags = tags
-      updateMarkup(value.current, markup)
+      updateMarkup(value.current, markup.current)
       forceUpdate();
     };
 
@@ -31,7 +31,7 @@ export const Tags = ({value, markup}) =>{
       }
       tags = [...tags, ...splitTags(tag)];
       value.current.tags = tags
-      updateMarkup(value.current, markup)
+      updateMarkup(value.current, markup.current)
       setEditing(false);
     },[tags, setEditing]);
 

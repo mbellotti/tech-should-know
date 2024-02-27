@@ -6,23 +6,23 @@ export function ArticleMetaData({value, markup}){
         switch (event.target.id){
             case "paperName":
                 value.current.paperName = event.target.value
-                updateMarkup(value.current, markup)
+                updateMarkup(value.current, markup.current)
                 return
             case "paperAuthor":
                 value.current.paperAuthor = event.target.value
-                updateMarkup(value.current, markup)
+                updateMarkup(value.current, markup.current)
                 return
             case "submitName":
                 value.current.submitName = event.target.value
-                updateMarkup(value.current, markup)
+                updateMarkup(value.current, markup.current)
                 return
             case "submitLink": 
                 value.current.submitLink = event.target.value
-                updateMarkup(value.current, markup)
+                updateMarkup(value.current, markup.current)
                 return
             case "doi": 
                 value.current.doi = event.target.value
-                getReferences(value.current, markup)
+                getReferences(value.current, markup.current)
                 return
         }
       };
