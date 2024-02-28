@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/tech-should-know/static/css/main.f7b9fac6.css",
-    "main.js": "/tech-should-know/static/js/main.56ad8d98.js",
-    "static/js/453.0e511517.chunk.js": "/tech-should-know/static/js/453.0e511517.chunk.js",
-    "index.html": "/tech-should-know/index.html",
-    "main.f7b9fac6.css.map": "/tech-should-know/static/css/main.f7b9fac6.css.map",
-    "main.56ad8d98.js.map": "/tech-should-know/static/js/main.56ad8d98.js.map",
-    "453.0e511517.chunk.js.map": "/tech-should-know/static/js/453.0e511517.chunk.js.map"
+    "main.css": "/static/css/main.f7b9fac6.css",
+    "main.js": "/static/js/main.3d5b7cb7.js",
+    "static/js/453.0e511517.chunk.js": "/static/js/453.0e511517.chunk.js",
+    "index.html": "/index.html",
+    "main.f7b9fac6.css.map": "/static/css/main.f7b9fac6.css.map",
+    "main.3d5b7cb7.js.map": "/static/js/main.3d5b7cb7.js.map",
+    "453.0e511517.chunk.js.map": "/static/js/453.0e511517.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f7b9fac6.css",
-    "static/js/main.56ad8d98.js"
+    "static/js/main.3d5b7cb7.js"
   ]
 }
