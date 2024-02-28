@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/tech-should-know/static/css/main.f7b9fac6.css",
-    "main.js": "/tech-should-know/static/js/main.50ba51c2.js",
+    "main.js": "/tech-should-know/static/js/main.56ad8d98.js",
     "static/js/453.0e511517.chunk.js": "/tech-should-know/static/js/453.0e511517.chunk.js",
     "index.html": "/tech-should-know/index.html",
     "main.f7b9fac6.css.map": "/tech-should-know/static/css/main.f7b9fac6.css.map",
-    "main.50ba51c2.js.map": "/tech-should-know/static/js/main.50ba51c2.js.map",
+    "main.56ad8d98.js.map": "/tech-should-know/static/js/main.56ad8d98.js.map",
     "453.0e511517.chunk.js.map": "/tech-should-know/static/js/453.0e511517.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f7b9fac6.css",
-    "static/js/main.50ba51c2.js"
+    "static/js/main.56ad8d98.js"
   ]
 }
