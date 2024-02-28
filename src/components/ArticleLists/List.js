@@ -33,7 +33,9 @@ export function List(){
             <center><h1>Tech Should Know</h1>
             <h2>social science for software people</h2></center>
             <h3 className="mt-5">By Tag</h3>
+            <div id="tagcloud">
             <TagCloud data={masterlist.tags} />
+            </div>
             <h3 className="mt-5">Featured Researchers</h3>
             <Profiles />
             <h3 className="mt-5">The Master List</h3>

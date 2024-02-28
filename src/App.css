@@ -65,6 +65,10 @@ body {
   font-weight:700;
 }
 
+#tagcloud text {
+  cursor: pointer;
+}
+
 .link-callout{
   background-color:#FFB534;
   color: #fff;
