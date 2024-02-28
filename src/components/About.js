@@ -31,6 +31,7 @@ export function About(){
             <p>I also prefer that the paper in question be freely available for download through some legitimate means. The means a university site, the author's CV, or any number of open science repos, not Sci-hub (although I do love Sci-hub). While the whole concept of this site is to post articles with commentary/analysis (and therefore fair use), I'd like to be able to link back to the original paper if for no other reason than it helps people discover more works by the same author or colleagues in the space.</p>
            <h3>What Else?</h3>
            <p>Icons by <a href="https://thenounproject.com/grega.cresnar/">Grega Cresnar</a> and <a href="https://thenounproject.com/ArtZ91/">Arthur Shlain</a></p>
+           <p>Special thanks to <a href="https://www.linkedin.com/in/matthew-bergman-a1571b4b/">Matt Bergman</a> for valiantly trying to teach me the right way to do React (I didn't listen, obviously!)</p>
            </Col>
           <Col sm={2} className='notes'>
           </Col>
