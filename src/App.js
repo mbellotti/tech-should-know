@@ -18,16 +18,16 @@ function Layout() {
     <Container fluid>
       <Navbar expand="lg">
       <Container>
-        <Navbar.Brand href="/">
+        <Navbar.Brand href="/#">
         <img src="/book.svg" width="30" height="30" class="d-inline-block align-middle m-1" alt=""/>
         <span className="d-sm-none d-md-inline">TechShouldKnow</span><span className="d-none d-sm-inline d-md-none">TSK</span>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link href="/about">About</Nav.Link>
-            <Nav.Link href="/items">List</Nav.Link>
-            <Nav.Link href="/submit"><span className="link-callout">Submit</span></Nav.Link>
+            <Nav.Link href="#/about">About</Nav.Link>
+            <Nav.Link href="#/items">List</Nav.Link>
+            <Nav.Link href="#/submit"><span className="link-callout">Submit</span></Nav.Link>
             </Nav>
         </Navbar.Collapse>
       </Container>
