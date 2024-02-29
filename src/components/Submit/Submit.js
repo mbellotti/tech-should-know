@@ -79,8 +79,8 @@ export function Submit(){
           <Submission value={value} markup={markup}/>
           </Col>
           <Col sm={5} className='markup'>
-            <div className="copyBlock">
-            <CopyIcon iconClass={iconClass} onClick={() => {copyMarkup()}}/>
+            <div className="copyBlock" onClick={() => {copyMarkup()}}>
+            <CopyIcon iconClass={iconClass}/>
             </div>
             <div id="dispalyMarkup" className="markupBody">
           {txt}
