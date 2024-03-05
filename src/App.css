@@ -19,12 +19,23 @@ body {
   font-weight:600;
 }
 
+.profile-photo-block{
+  margin: 10px 5px 10px 5px;
+}
+
+.profile-photo{
+  float:left;
+  margin: 5px;
+}
+
+.profile-photo a{
+  padding: 0px !important;
+}
+
 .profile-photo img{
   border-radius: 50% !important;
-  float:none !important;
-  margin: 5px;
-  width: 200px;
-  height: 200px;
+  max-height: 200px;
+  max-width: 200px;
 }
 
 .content a, #extra a {
