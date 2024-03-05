@@ -14,9 +14,7 @@ export const Tags = ({value, markup}) =>{
     const [isEditing, setEditing] = useState(false);
     const inputRef = useRef([])
     const forceUpdate = useForceUpdate();
-    //const [typing, setTyping] = useState(false);
-    //const [inputValue, setInputValue] = useState('');
-  
+    
     const removeTag = (tag, tags) => {
       tags = tags.filter(item => item !== tag);
       value.current.tags = tags
@@ -67,38 +65,5 @@ export const Tags = ({value, markup}) =>{
       )}
     </TagGroup>
     );
-  
-    // const renderInput = () => {
-    //   if (typing) {
-    //     return (
-    //       <Input
-    //         className="form-control form-control-sm"
-    //         size="xs"
-    //         style={{ width: 70 }}
-    //         value={inputValue}
-    //         onChange={setInputValue}
-    //         onBlur={addTag}
-    //         onPressEnter={addTag}
-    //       />
-    //     );
-    //   }
-  
-    //   return (
-    //     <button
-    //       className="btn"
-    //       onClick={handleButtonClick}>
-    //         <AddLink /></button>
-    //   );
-    // };
-    // return (
-    //   <TagGroup>
-    //     {tags.map((item, index) => (
-    //       <Tag key={index} closable onClose={() => removeTag(item)}>
-    //         {item}
-    //       </Tag>
-    //     ))}
-    //     {renderInput()}
-    //   </TagGroup>
-    // );
   };
   
