@@ -73,7 +73,7 @@ export function Submit(){
           <Col sm={8} className="offset-md-2 content">
             <center><h1>Tech Should Know</h1>
             <h2>social science for software people</h2></center>
-            <p>Use this editor to generate the markup correctly then open a PR to <a href="https://github.com/mbellotti/tech-should-know-data">this repo</a></p>
+            <p>Use this editor to generate the markup correctly then open a PR to <a href="https://github.com/mbellotti/tech-should-know-data">this repo</a>. Or just <a href="https://www.linkedin.com/groups/12989822/">join the conversation</a> about potential additions on LinkedIn.</p>
         </Col></Row>
         <Row><Col sm={7} className="mr-2 content">
           <Submission value={value} markup={markup}/>
